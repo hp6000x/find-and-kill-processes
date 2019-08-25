@@ -1,0 +1,44 @@
+#!/bin/bash
+#find and kill processes by search string. Can handle multiple processes. Exercise caution when running this script!
+opt=""
+cmd="kill"
+srch="$1"
+case $srch in
+	("h"|"help"|"-h"|"--help"|"")	echo "Usage: $0 \"search string\" [kill options, eg -9]"; exit;;
+esac
+shift
+while [[ ! -z "$1" ]]; do
+	if [[ -z "$opt" ]]; then
+		opt="$1"
+	else
+		opt="$opt $1"
+	fi
+	shift
+done
+psfind "$srch"
+counter=0
+a=($(psfind "$srch"))
+while [[ ! -z "$a" ]]; do
+	if [[ "${a[0]}" != "$USER" ]]; then
+		out="sudo $cmd"
+	else
+		out="$cmd"
+	fi
+	if [[ ! -z "$opt" ]]; then
+		out="$out $opt"
+	fi
+	target=${a[1]}
+	echo "Killing $target"
+	echo "$out $target"
+	$out $target
+	sleep 1s
+	a=($(psfind "$srch"))
+	counter=$((counter+1))
+done
+s="es"
+test $counter -eq 1 && s=""
+if [[ $counter -gt 0 ]]; then
+	echo "$counter process$s killed."
+else
+	echo "No processes found."
+fi
